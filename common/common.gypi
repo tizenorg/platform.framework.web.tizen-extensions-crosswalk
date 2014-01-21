@@ -16,7 +16,9 @@
         'sources/': [['exclude', '_desktop\\.cc$|desktop/']],
         'includes/': [['exclude', '_desktop\\.gypi$|desktop/']],
       }],
-      ['extension_host_os == "mobile"', { 'defines': ['TIZEN_MOBILE'] } ],
+      ['extension_host_os == "mobile"', { 'defines': ['TIZEN_MOBILE', 'TIZEN_GENERIC' ] } ],
+      ['extension_host_os == "ivi"', { 'defines': ['TIZEN_IVI', 'TIZEN_GENERIC'] } ],
+      ['extension_host_os == "generic"', { 'defines': [ 'TIZEN_GENERIC' ] } ],
       ['extension_host_os == "desktop"', { 'defines': ['GENERIC_DESKTOP'] } ],
       ['extension_build_type== "Debug"', {
         'defines': ['_DEBUG', ],
