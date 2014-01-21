@@ -244,7 +244,7 @@ void SystemInfoInstance::HandleGetCapabilities() {
     o["inputKeyboard"] = picojson::value(b);
 
   if(system_info_get_platform_string("tizen.org/feature/input.keyboard.layout", &s) == SYSTEM_INFO_ERROR_NONE)
-    o["inputKeyboardLayout"] = picojson::value(b);
+    o["inputKeyboardLayout"] = picojson::value(s);
 
   if(system_info_get_platform_bool("tizen.org/feature/network.wifi", &b) == SYSTEM_INFO_ERROR_NONE)
     o["wifi"] = picojson::value(b);
@@ -530,52 +530,40 @@ void SystemInfoInstance::HandleGetCapabilities() {
   if(system_info_get_platform_bool("tizen.org/feature/network.telephony.sms", &b) == SYSTEM_INFO_ERROR_NONE)
     o["telephonySms"] = picojson::value(b);
 
-  std::string screensize_normal =
-      system_info::GetPropertyFromFile(
-          sSystemInfoFilePath,
-          "http://tizen.org/feature/screen.coordinate_system.size.normal");
-  o["screenSizeNormal"] =
-      picojson::value(system_info::ParseBoolean(screensize_normal));
+  if(system_info_get_platform_bool("tizen.org/feature/screen.size.normal", &b) == SYSTEM_INFO_ERROR_NONE)
+  o["screenSizeNormal"] =  picojson::value(b);
 
-  int height;
-  int width;
-  system_info_get_value_int(SYSTEM_INFO_KEY_SCREEN_HEIGHT, &height);
-  system_info_get_value_int(SYSTEM_INFO_KEY_SCREEN_WIDTH, &width);
-  o["screenSize480_800"] = picojson::value(false);
-  o["screenSize720_1280"] = picojson::value(false);
-  if ((width == 480) && (height == 800)) {
-    o["screenSize480_800"] = picojson::value(true);
-  } else if ((width == 720) && (height == 1280)) {
-    o["screenSize720_1280"] = picojson::value(true);
-  }
+  if(system_info_get_platform_bool("tizen.org/feature/screen.size.normal.480.800", &b) == SYSTEM_INFO_ERROR_NONE) 
+	  o["screenSize480_800"] = picojson::value(b);
+
+  if(system_info_get_platform_bool("tizen.org/feature/screen.size.normal.720.1280", &b) == SYSTEM_INFO_ERROR_NONE) 
+	  o["screenSize720_1280"] = picojson::value(b);
+	  
 
   if(system_info_get_platform_bool("tizen.org/feature/screen.auto_rotation", &b) == SYSTEM_INFO_ERROR_NONE)
     o["autoRotation"] = picojson::value(b);
 
-  pkgmgrinfo_pkginfo_h handle;
-  if (pkgmgrinfo_pkginfo_get_pkginfo("gi2qxenosh", &handle) == PMINFO_R_OK)
-    o["shellAppWidget"] = picojson::value(true);
-  else
-    o["shellAppWidget"] = picojson::value(false);
+  if(system_info_get_platform_bool("tizen.org/feature/shell.appwidget", &b) == SYSTEM_INFO_ERROR_NONE)
+    o["shellAppWidget"] = picojson::value(b);
 
-  b = system_info::PathExists("/usr/lib/osp/libarengine.so");
-  o["visionImageRecognition"] = picojson::value(b);
-  o["visionQrcodeGeneration"] = picojson::value(b);
-  o["visionQrcodeRecognition"] = picojson::value(b);
-  o["visionFaceRecognition"] = picojson::value(b);
+  if(system_info_get_platform_bool("tizen.org/feature/vision.image_recognition", &b) == SYSTEM_INFO_ERROR_NONE)
+    o["visionImageRecognition"] = picojson::value(b);
+  if(system_info_get_platform_bool("tizen.org/feature/vision.qrcode_generation", &b) == SYSTEM_INFO_ERROR_NONE)
+    o["visionQrcodeGeneration"] = picojson::value(b);
+  if(system_info_get_platform_bool("tizen.org/feature/vision.qrcode_recognition", &b) == SYSTEM_INFO_ERROR_NONE)
+    o["visionQrcodeRecognition"] = picojson::value(b);
+  if(system_info_get_platform_bool("tizen.org/feature/vision.face_recognition", &b) == SYSTEM_INFO_ERROR_NONE)
+    o["visionFaceRecognition"] = picojson::value(b);
 
-  b = system_info::PathExists("/usr/bin/smartcard-daemon");
-  o["secureElement"] = picojson::value(b);
+  if(system_info_get_platform_bool("tizen.org/feature/network.secure_element", &b ) == SYSTEM_INFO_ERROR_NONE) 
+    o["secureElement"] = picojson::value(b);
 
-  std::string osp_compatible =
-      system_info::GetPropertyFromFile(
-          sSystemInfoFilePath,
-          "http://tizen.org/feature/platform.native.osp_compatible");
-  o["nativeOspCompatible"] =
-      picojson::value(system_info::ParseBoolean(osp_compatible));
-
-  // FIXME(halton): Not supported until Tizen 2.2
-  o["profile"] = picojson::value("MOBILE_WEB");
+  if(system_info_get_platform_bool("tizen.org/feature/platform.native.osp_compatible", &b) == SYSTEM_INFO_ERROR_NONE)
+   o["nativeOspCompatible"] = picojson::value(b);
+   
+  s = NULL;
+  system_info_get_platform_string("tizen.org/feature/profile", &s);
+  o["profile"] = picojson::value(s ? s : "");
 
   o["error"] = picojson::value("");
 #elif defined(GENERIC_DESKTOP)
