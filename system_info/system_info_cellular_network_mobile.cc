@@ -6,6 +6,7 @@
 
 #include <net_connection.h>
 #include <system_info.h>
+#include <ITapiModem.h>
 
 const std::string SysInfoCellularNetwork::name_ = "CELLULAR_NETWORK";
 
@@ -114,14 +115,11 @@ void SysInfoCellularNetwork::SetFlightMode() {
 
 void SysInfoCellularNetwork::SetIMEI() {
   char* imei = NULL;
-  if (system_info_get_value_string(SYSTEM_INFO_KEY_MOBILE_DEVICE_ID, &imei) !=
-      SYSTEM_INFO_ERROR_NONE) {
+  imei = tel_get_misc_me_imei_sync(NULL);
+  if(!imei)
     imei_ = "";
-    return;
-  }
-
-  imei_ = imei;
-  free(imei);
+  else
+	imei_ = imei;
 }
 
 void SysInfoCellularNetwork::Get(picojson::value& error,
