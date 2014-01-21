@@ -42,6 +42,7 @@ BuildRequires: pkgconfig(message-port)
 BuildRequires: pkgconfig(notification)
 BuildRequires: pkgconfig(pkgmgr-info)
 BuildRequires: pkgconfig(pmapi)
+BuildRequires:  pkgconfig(tapi)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(x11)
 BuildRequires: pkgconfig(xrandr)
@@ -90,6 +91,7 @@ export GYP_GENERATORS='make'
 ./tools/gyp/gyp \
 --depth=.       \
 -Dextension_build_type=Debug   \
+-Dextension_host_os=mobile \
 tizen-wrt.gyp
 
 make %{?_smp_mflags}
