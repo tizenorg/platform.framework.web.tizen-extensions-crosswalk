@@ -20,6 +20,8 @@ class Application {
   explicit Application(const std::string& pkg_id);
   ~Application();
 
+  GDBusProxy* CreateRunningAppProxy(const std::string& xwalk_app_id);
+
   const std::string GetAppId();
   ApplicationInformation GetAppInfo();
   ApplicationContext GetAppContext();
