@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "application/application.h"
 #include "application/application_extension_utils.h"
 #include "application/application_information.h"
 #include "application/application_instance.h"
@@ -140,18 +141,43 @@ picojson::value* ApplicationManager::KillApp(const std::string& context_id) {
 
 picojson::value* ApplicationManager::LaunchApp(const std::string& app_id) {
   WebApiAPIErrors error = WebApiAPIErrors::NO_ERROR;
-  int ret = aul_open_app(app_id.c_str());
-  if (ret < 0) {
-    switch (ret) {
-      case AUL_R_EINVAL:
-      case AUL_R_ERROR:
-        return CreateResultMessage(WebApiAPIErrors::NOT_FOUND_ERR);
-      default:
-        return CreateResultMessage(WebApiAPIErrors::UNKNOWN_ERR);
-    }
-  }
+  Application *app;
+  GDBusProxy *running_app_proxy;
+  int is_running = aul_app_is_running(app_id.c_str());
 
-  return CreateResultMessage();
+  if (is_running) {
+
+    app = new Application(app_id.c_str());
+    if (!(running_app_proxy = app->CreateRunningAppProxy(app_id.c_str())))
+      return CreateResultMessage(WebApiAPIErrors::UNKNOWN_ERR);
+
+    GError* error = NULL;
+    GVariant* result = g_dbus_proxy_call_sync(
+        running_app_proxy, "Show", NULL,
+        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+    if (!result) {
+      std::cerr << "Fail to call 'Show':" << error->message << std::endl;
+      g_error_free(error);
+      return CreateResultMessage(WebApiAPIErrors::UNKNOWN_ERR);
+    }
+
+    return CreateResultMessage();
+
+  }  else {
+
+    int ret = aul_open_app(app_id.c_str());
+    if (ret < 0) {
+      switch (ret) {
+        case AUL_R_EINVAL:
+        case AUL_R_ERROR:
+          return CreateResultMessage(WebApiAPIErrors::NOT_FOUND_ERR);
+        default:
+          return CreateResultMessage(WebApiAPIErrors::UNKNOWN_ERR);
+      }
+    }
+
+    return CreateResultMessage();
+  }
 }
 
 picojson::value* ApplicationManager::RegisterAppInfoEvent(

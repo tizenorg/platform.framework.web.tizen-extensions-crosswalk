@@ -8,6 +8,7 @@
 #include <package_manager.h>
 #include <package-manager.h>
 
+#include <gio/gio.h>
 #include <functional>
 #include <map>
 #include <string>
