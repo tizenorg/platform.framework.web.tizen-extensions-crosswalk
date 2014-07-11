@@ -83,6 +83,7 @@ void BluetoothInstance::OnStateChanged(int result,
     return;
   }
 
+  LOG_DBG(adapter_state);
   obj->adapter_enabled_ = (adapter_state == BT_ADAPTER_ENABLED) ? true : false;
 
   if (obj->js_reply_needed_) {
@@ -113,6 +114,7 @@ void BluetoothInstance::OnNameChanged(char* name, void* user_data) {
     return;
   }
 
+  LOG_DBG(name);
   picojson::value::object o;
 
   o["cmd"] = picojson::value("AdapterUpdated");
@@ -131,6 +133,7 @@ void BluetoothInstance::OnVisibilityChanged(int result,
     return;
   }
 
+  LOG_DBG(visibility_mode);
   picojson::value::object o;
 
   const char* visible =
@@ -158,6 +161,7 @@ void BluetoothInstance::OnDiscoveryStateChanged(int result,
     return;
   }
 
+  LOG_DBG(discovery_state);
   picojson::value::object o;
 
   switch (discovery_state) {
@@ -259,6 +263,7 @@ bool BluetoothInstance::OnKnownBondedDevice(bt_device_info_s* device_info,
     return false;
   }
 
+  LOG_DBG(device_info->remote_name);
   picojson::value::object o;
   char* alias = device_info->remote_name;
   o["Alias"] = picojson::value(alias);
@@ -300,6 +305,8 @@ void BluetoothInstance::OnBondCreated(int result, bt_device_info_s* device_info,
     return;
   }
 
+
+  LOG_DBG("");
   picojson::value::object o;
   o["cmd"] = picojson::value("");
   o["reply_id"] = picojson::value(obj->callbacks_id_map_["CreateBonding"]);
@@ -326,6 +333,8 @@ void BluetoothInstance::OnBondDestroyed(int result, char* remote_address,
     LOG_ERR("remote_address is NULL!");
     return;
   }
+
+  LOG_DBG("");
   picojson::value::object o;
   o["cmd"] = picojson::value("");
   o["reply_id"] = picojson::value(obj->callbacks_id_map_["DestroyBonding"]);
@@ -355,6 +364,8 @@ void BluetoothInstance::OnSocketConnected(int result,
   }
 
   picojson::value::object o;
+
+  LOG_DBG(connection_state);
 
   if (result) {
     LOG_ERR("onSocketConnected() is failed");
@@ -407,6 +418,8 @@ void BluetoothInstance::OnSocketHasData(bt_socket_received_data_s* data,
     LOG_ERR("data is NULL");
     return;
   }
+
+  LOG_DBG("");
   picojson::value::object o;
   o["cmd"] = picojson::value("SocketHasData");
   o["socket_fd"] = picojson::value(static_cast<double>(data->socket_fd));
@@ -585,6 +598,8 @@ void BluetoothInstance::HandleRFCOMMListen(const picojson::value& msg) {
   CAPI_ERR(
       bt_socket_create_rfcomm(msg.get("uuid").to_str().c_str(), &socket_fd),
       error);
+  LOG_DBG(msg.get("uuid").to_str().c_str());
+  LOG_DBG(socket_fd);
   if (error) {
     o["error"] = picojson::value(static_cast<double>(1));
     InternalPostMessage(picojson::value(o));

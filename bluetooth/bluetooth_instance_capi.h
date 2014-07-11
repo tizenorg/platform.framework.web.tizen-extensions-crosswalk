@@ -16,20 +16,24 @@
 #include "common/extension.h"
 #include "common/picojson.h"
 
+#define LOG_DBG(msg) std::cout << "[DBG] " << __FUNCTION__ << ":" << __LINE__ << " -- "<< msg << std::endl
 #define LOG_ERR(msg) std::cerr << "[Error] " << msg << std::endl
 
 // Macros interfacing with C code from Bluetooth API.
 #define CAPI(fnc)                                                              \
   do {                                                                         \
+    LOG_DBG(#fnc);                                                             \
     int _er = (fnc);                                                           \
     if (_er != BT_ERROR_NONE) {                                                \
       LOG_ERR(#fnc " failed");                                                 \
+      LOG_ERR(_er);                                                            \
     }                                                                          \
   } while (0)
 
 // same CAPI macro providing error code
 #define CAPI_ERR(fnc, _er)                                                     \
   do {                                                                         \
+    LOG_DBG(#fnc);                                                             \
     _er = (fnc);                                                               \
     if (_er != BT_ERROR_NONE) {                                                \
       LOG_ERR(#fnc " failed");                                                 \
