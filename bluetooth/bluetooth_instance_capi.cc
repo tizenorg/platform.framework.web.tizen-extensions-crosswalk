@@ -19,14 +19,15 @@ BluetoothInstance::BluetoothInstance()
       adapter_enabled_(false),
       js_reply_needed_(false),
       stop_discovery_from_js_(false) {
-
-  CAPI(bt_initialize());
-  InitializeAdapter();
 }
 
 BluetoothInstance::~BluetoothInstance() {
   UninitializeAdapter();
   CAPI(bt_deinitialize());
+}
+
+  CAPI(bt_initialize());
+  InitializeAdapter();
 }
 
 void BluetoothInstance::HandleMessage(const char* message) {
@@ -56,6 +57,16 @@ void BluetoothInstance::HandleMessage(const char* message) {
     HandleCloseSocket(v);
   else if (cmd == "UnregisterServer")
     HandleUnregisterServer(v);
+  else if (cmd == "RegisterSinkApp")
+    HandleRegisterSinkApp(v);
+  else if (cmd == "UnregisterSinkApp")
+    HandleUnregisterSinkApp(v);
+  else if (cmd == "ConnectToSource")
+    HandleConnectToSource(v);
+  else if (cmd == "DisconnectSource")
+    HandleDisconnectSource(v);
+  else if (cmd == "SendHealthData")
+    HandleSendHealthData(v);
 }
 
 void BluetoothInstance::HandleSyncMessage(const char* message) {
@@ -305,7 +316,6 @@ void BluetoothInstance::OnBondCreated(int result, bt_device_info_s* device_info,
     return;
   }
 
-
   LOG_DBG("");
   picojson::value::object o;
   o["cmd"] = picojson::value("");
@@ -427,6 +437,71 @@ void BluetoothInstance::OnSocketHasData(bt_socket_received_data_s* data,
   obj->InternalPostMessage(picojson::value(o));
 }
 
+void BluetoothInstance::OnHdpConnected(int result, const char* remote_address,
+    const char* app_id, bt_hdp_channel_type_e type, unsigned int channel,
+    void* user_data) {
+  BluetoothInstance* obj = static_cast<BluetoothInstance*>(user_data);
+  if (!obj) {
+    LOG_ERR("user_data is NULL");
+    return;
+  }
+
+  LOG_DBG("");
+  picojson::value::object o;
+  o["cmd"] = picojson::value("");
+  o["reply_id"] = picojson::value(obj->callbacks_id_map_["ConnectToSource"]);
+  obj->callbacks_id_map_.erase("ConnectToSource");
+
+  o["address"] = picojson::value(remote_address);
+  o["app_id"] = picojson::value(app_id);
+  o["channel_type"] = picojson::value(static_cast<double>(type));
+  o["channel"] = picojson::value(static_cast<double>(channel));
+  o["connected"] = picojson::value("true");
+  obj->InternalPostMessage(picojson::value(o));
+}
+
+void BluetoothInstance::OnHdpDisconnected(int result, const char* remote_address,
+    unsigned int channel, void* user_data) {
+  BluetoothInstance* obj = static_cast<BluetoothInstance*>(user_data);
+  if (!obj) {
+    LOG_ERR("user_data is NULL");
+    return;
+  }
+
+  LOG_DBG("");
+  picojson::value::object o;
+  if (result)
+    o["error"] = picojson::value(static_cast<double>(1));
+  else
+    o["error"] = picojson::value(static_cast<double>(0));
+  o["cmd"] = picojson::value("");
+  o["reply_id"] = picojson::value(obj->callbacks_id_map_["DisconnectSource"]);
+  obj->callbacks_id_map_.erase("DisconnectSource");
+  o["address"] = picojson::value(remote_address);
+  o["channel"] = picojson::value(static_cast<double>(channel));
+  o["connected"] = picojson::value("false");
+  obj->InternalPostMessage(picojson::value(o));
+}
+
+void BluetoothInstance::OnHdpDataReceived(unsigned int channel, const char* data,
+    unsigned int size, void* user_data) {
+  BluetoothInstance* obj = static_cast<BluetoothInstance*>(user_data);
+  if (!obj) {
+    LOG_ERR("user_data is NULL");
+    return;
+  }
+
+  LOG_DBG("");
+  picojson::value::object o;
+  o["reply_id"] = picojson::value(obj->callbacks_id_map_["SendHealthData"]);
+  obj->callbacks_id_map_.erase("SendHealthData");
+  o["channel"] = picojson::value(static_cast<double>(channel));
+  o["data"] = picojson::value(data);
+  o["size"] = picojson::value(static_cast<double>(size));
+  obj->InternalPostMessage(picojson::value(o));
+}
+
+
 gboolean BluetoothInstance::GetDefaultAdapter(gpointer user_data) {
   BluetoothInstance* obj = static_cast<BluetoothInstance*>(user_data);
   if (!obj) {
@@ -488,6 +563,11 @@ void BluetoothInstance::InitializeAdapter() {
   CAPI(bt_device_set_bond_created_cb(OnBondCreated, this));
   CAPI(bt_device_set_bond_destroyed_cb(OnBondDestroyed, this));
 
+  // Should also be socket_connected_cb...
+
+  CAPI(bt_hdp_set_connection_state_changed_cb(OnHdpConnected, OnHdpDisconnected, this));
+  CAPI(bt_hdp_set_data_received_cb(OnHdpDataReceived, this));
+
   bt_adapter_state_e state = BT_ADAPTER_DISABLED;
   CAPI(bt_adapter_get_state(&state));
 
@@ -510,6 +590,9 @@ void BluetoothInstance::UninitializeAdapter() {
   CAPI(bt_device_unset_bond_destroyed_cb());
   CAPI(bt_socket_unset_connection_state_changed_cb());
   CAPI(bt_socket_unset_data_received_cb());
+
+  CAPI(bt_hdp_unset_connection_state_changed_cb());
+  CAPI(bt_hdp_unset_data_received_cb());
 }
 
 void BluetoothInstance::HandleGetDefaultAdapter(const picojson::value& msg) {
@@ -662,7 +745,6 @@ void BluetoothInstance::HandleCloseSocket(const picojson::value& msg) {
   else
     o["error"] = picojson::value(static_cast<double>(1));
 
-
   o["cmd"] = picojson::value("");
   o["reply_id"] = msg.get("reply_id");
   o["capi"] = picojson::value(static_cast<double>(1));
@@ -674,6 +756,104 @@ void BluetoothInstance::HandleUnregisterServer(const picojson::value& msg) {
   int socket = static_cast<int>(msg.get("server_fd").get<double>());
 
   CAPI(bt_socket_destroy_rfcomm(socket));
+}
+
+void BluetoothInstance::HandleRegisterSinkApp(const picojson::value& msg) {
+  picojson::value::object o;
+  int error = 0;
+
+  unsigned short data_type =
+      static_cast<unsigned short>(msg.get("datatype").get<double>());
+
+  LOG_DBG(data_type);
+
+  char* app_id = NULL;
+  CAPI_ERR(bt_hdp_register_sink_app(data_type, &app_id), error);
+  LOG_DBG(app_id);
+  if (!error) {
+    o["error"] = picojson::value(static_cast<double>(0));
+    o["app_id"] = picojson::value(app_id);
+  } else {
+    o["error"] = picojson::value(static_cast<double>(1));
+  }
+  o["cmd"] = picojson::value("");
+  o["reply_id"] = msg.get("reply_id");
+  InternalPostMessage(picojson::value(o));
+}
+
+void BluetoothInstance::HandleUnregisterSinkApp(const picojson::value& msg) {
+  picojson::value::object o;
+  int error = 0;
+
+  LOG_DBG(msg.get("app_id").to_str());
+
+  CAPI_ERR(bt_hdp_unregister_sink_app(msg.get("app_id").to_str().c_str()), error);
+  if (!error)
+    o["error"] = picojson::value(static_cast<double>(0));
+  else
+    o["error"] = picojson::value(static_cast<double>(1));
+
+  o["cmd"] = picojson::value("");
+  o["reply_id"] = msg.get("reply_id");
+  InternalPostMessage(picojson::value(o));
+}
+
+void BluetoothInstance::HandleConnectToSource(const picojson::value& msg) {
+  picojson::value::object o;
+  int error = 0;
+
+  CAPI_ERR(
+      bt_hdp_connect_to_source(msg.get("address").to_str().c_str(),
+                               msg.get("app_id").to_str().c_str()),
+      error);
+  if (error != BT_ERROR_NONE) {
+    o["error"] = picojson::value(static_cast<double>(2));
+    if (error == BT_ERROR_INVALID_PARAMETER)
+      o["error"] = picojson::value(static_cast<double>(1));
+    o["cmd"] = picojson::value("");
+    o["reply_id"] = msg.get("reply_id");
+    InternalPostMessage(picojson::value(o));
+  } else {
+    callbacks_id_map_["ConnectToSource"] = msg.get("reply_id").to_str();
+  }
+}
+
+void BluetoothInstance::HandleDisconnectSource(const picojson::value& msg) {
+  picojson::value::object o;
+  int error = 0;
+
+  int channel = static_cast<int>(msg.get("channel").get<double>());
+
+  CAPI_ERR(bt_hdp_disconnect(msg.get("address").to_str().c_str(), channel),
+           error);
+  if (error != BT_ERROR_NONE) {
+    o["error"] = picojson::value(static_cast<double>(1));
+    o["cmd"] = picojson::value("");
+    o["reply_id"] = msg.get("reply_id");
+    InternalPostMessage(picojson::value(o));
+  } else {
+    callbacks_id_map_["DisconnectSource"] = msg.get("reply_id").to_str();
+  }
+}
+
+void BluetoothInstance::HandleSendHealthData(const picojson::value& msg) {
+  picojson::value::object o;
+  int error = 0;
+
+  std::string data = msg.get("data").to_str();
+  int channel = static_cast<int>(msg.get("channel").get<double>());
+
+  CAPI_ERR(
+      bt_hdp_send_data(channel, data.c_str(), static_cast<int>(data.size())),
+      error);
+  if (error != BT_ERROR_NONE) {
+    o["error"] = picojson::value(static_cast<double>(1));
+    o["cmd"] = picojson::value("");
+    o["reply_id"] = msg.get("reply_id");
+    InternalPostMessage(picojson::value(o));
+  } else {
+    callbacks_id_map_["SendHealthData"] = msg.get("reply_id").to_str();
+  }
 }
 
 void BluetoothInstance::FlushPendingMessages() {
