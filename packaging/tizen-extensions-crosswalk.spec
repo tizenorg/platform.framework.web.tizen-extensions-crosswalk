@@ -29,7 +29,7 @@ BuildRequires: pkgconfig(bluez)
 BuildRequires: pkgconfig(capi-appfw-application)
 BuildRequires: pkgconfig(capi-appfw-app-manager)
 BuildRequires: pkgconfig(capi-appfw-package-manager)
-BuildRequires: pkgconfig(capi-network-bluetooth)
+BuildRequires: bluetooth-frwk-devel
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-network-nfc)
 BuildRequires: pkgconfig(capi-system-device)
