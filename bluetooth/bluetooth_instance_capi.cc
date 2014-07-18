@@ -389,8 +389,7 @@ void BluetoothInstance::OnSocketConnected(int result,
     o["socket_fd"] =
         picojson::value(static_cast<double>(connection->socket_fd));
     o["peer"] = picojson::value(connection->remote_address);
-
-    CAPI(bt_socket_set_data_received_cb(OnSocketHasData, NULL));
+    obj->socket_connected_map_[connection->socket_fd] = true;
   } else if (connection_state == BT_SOCKET_CONNECTED &&
              connection->local_role == BT_SOCKET_CLIENT) {
     o["cmd"] = picojson::value("");
@@ -401,8 +400,7 @@ void BluetoothInstance::OnSocketConnected(int result,
     o["uuid"] = picojson::value(connection->service_uuid);
     o["socket_fd"] =
         picojson::value(static_cast<double>(connection->socket_fd));
-
-    CAPI(bt_socket_set_data_received_cb(OnSocketHasData, NULL));
+    obj->socket_connected_map_[connection->socket_fd] = true;
   } else if (connection_state == BT_SOCKET_DISCONNECTED) {
       o["cmd"] = picojson::value("");
       o["reply_id"] =
@@ -410,6 +408,7 @@ void BluetoothInstance::OnSocketConnected(int result,
       obj->callbacks_id_map_.erase("RFCOMMsocketDestroy");
       o["socket_fd"] =
           picojson::value(static_cast<double>(connection->socket_fd));
+      obj->socket_connected_map_[connection->socket_fd] = false;
   } else {
     LOG_ERR("Unknown role!");
     return;
@@ -563,7 +562,8 @@ void BluetoothInstance::InitializeAdapter() {
   CAPI(bt_device_set_bond_created_cb(OnBondCreated, this));
   CAPI(bt_device_set_bond_destroyed_cb(OnBondDestroyed, this));
 
-  // Should also be socket_connected_cb...
+  CAPI(bt_socket_set_connection_state_changed_cb(OnSocketConnected, this));
+  CAPI(bt_socket_set_data_received_cb(OnSocketHasData, this));
 
   CAPI(bt_hdp_set_connection_state_changed_cb(OnHdpConnected, OnHdpDisconnected, this));
   CAPI(bt_hdp_set_data_received_cb(OnHdpDataReceived, this));
@@ -590,7 +590,6 @@ void BluetoothInstance::UninitializeAdapter() {
   CAPI(bt_device_unset_bond_destroyed_cb());
   CAPI(bt_socket_unset_connection_state_changed_cb());
   CAPI(bt_socket_unset_data_received_cb());
-
   CAPI(bt_hdp_unset_connection_state_changed_cb());
   CAPI(bt_hdp_unset_data_received_cb());
 }
@@ -681,32 +680,36 @@ void BluetoothInstance::HandleRFCOMMListen(const picojson::value& msg) {
   CAPI_ERR(
       bt_socket_create_rfcomm(msg.get("uuid").to_str().c_str(), &socket_fd),
       error);
+
   LOG_DBG(msg.get("uuid").to_str().c_str());
   LOG_DBG(socket_fd);
-  if (error) {
-    o["error"] = picojson::value(static_cast<double>(1));
+
+  if (error != BT_ERROR_NONE) {
+    o["error"] = picojson::value(static_cast<double>(2));
+    if (error == BT_ERROR_INVALID_PARAMETER)
+      o["error"] = picojson::value(static_cast<double>(1));
+    o["cmd"] = picojson::value("");
+    o["reply_id"] = msg.get("reply_id");
     InternalPostMessage(picojson::value(o));
     return;
   }
+
+  socket_connected_map_[socket_fd] = false;
 
   CAPI_ERR(bt_socket_listen_and_accept_rfcomm(socket_fd, 0), error);
   if (error) {
     o["error"] = picojson::value(static_cast<double>(1));
-    InternalPostMessage(picojson::value(o));
-    return;
-  }
-
-  CAPI_ERR(bt_socket_set_connection_state_changed_cb(OnSocketConnected, this),
-           error);
-  if (error) {
-    o["error"] = picojson::value(static_cast<double>(1));
+    o["cmd"] = picojson::value("");
+    o["reply_id"] = msg.get("reply_id");
     InternalPostMessage(picojson::value(o));
     return;
   }
 
   o["error"] = picojson::value(static_cast<double>(0));
   // give the listened socket to JS and store it in service_handler
-  o["socket_fd"] = picojson::value(static_cast<double>(socket_fd));
+  o["server_fd"] = picojson::value(static_cast<double>(socket_fd));
+  o["cmd"] = picojson::value("");
+  o["reply_id"] = msg.get("reply_id");
   InternalPostMessage(picojson::value(o));
 }
 
@@ -718,9 +721,7 @@ void BluetoothInstance::HandleConnectToService(const picojson::value& msg) {
       bt_socket_connect_rfcomm(msg.get("address").to_str().c_str(),
                                msg.get("uuid").to_str().c_str()),
       error);
-  if (!error)
-    CAPI(bt_socket_set_connection_state_changed_cb(OnSocketConnected, this));
-}
+ }
 
 void BluetoothInstance::HandleSocketWriteData(const picojson::value& msg) {
   picojson::value::object o;
@@ -752,10 +753,20 @@ void BluetoothInstance::HandleCloseSocket(const picojson::value& msg) {
 }
 
 void BluetoothInstance::HandleUnregisterServer(const picojson::value& msg) {
-  callbacks_id_map_["RFCOMMsocketDestroy"] = msg.get("reply_id").to_str();
   int socket = static_cast<int>(msg.get("server_fd").get<double>());
-
+  LOG_DBG(socket);
   CAPI(bt_socket_destroy_rfcomm(socket));
+
+  // CAPI calls callback only if there is a socket connected
+  if (socket_connected_map_[socket] = false) {
+    picojson::value::object o;
+    o["cmd"] = picojson::value("");
+    o["reply_id"] = msg.get("reply_id");
+    o["socket_fd"] = picojson::value(static_cast<double>(socket));
+    InternalPostMessage(picojson::value(o));
+  } else {
+    callbacks_id_map_["RFCOMMsocketDestroy"] = msg.get("reply_id").to_str();
+  }
 }
 
 void BluetoothInstance::HandleRegisterSinkApp(const picojson::value& msg) {

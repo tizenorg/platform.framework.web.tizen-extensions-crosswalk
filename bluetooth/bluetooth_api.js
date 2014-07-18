@@ -727,11 +727,9 @@ BluetoothAdapter.prototype.registerRFCOMMServiceByUUID =
   postMessage(msg, function(result) {
     if (result.error != 0) {
       if (errorCallback) {
-        var error;
-        if (result.error == 1)
-          error = new tizen.WebAPIError(tizen.WebAPIException.NOT_FOUND_ERR);
-        else
-          error = new tizen.WebAPIError(tizen.WebAPIException.UNKNOWN_ERR);
+        var error = new tizen.WebAPIError(tizen.WebAPIException.UNKNOWN_ERR);
+        if(result.error == 1)
+          error = new tizen.WebAPIError(tizen.WebAPIException.INVALID_VALUES_ERR);
         errorCallback(error);
       }
       return;
@@ -1019,6 +1017,7 @@ function BluetoothServiceHandler(name, uuid, msg) {
   _addConstProperty(this, 'name', name);
   _addConstProperty(this, 'uuid', uuid);
   _addConstProperty(this, 'isConnected', false);
+  this.onconnect = null;
 
   if (msg) {
     this.server_fd = msg.server_fd;
@@ -1031,9 +1030,6 @@ BluetoothServiceHandler.prototype.unregister = function(successCallback, errorCa
   if (!xwalk.utils.validateArguments('?ff', arguments)) {
     throw new tizen.WebAPIError(tizen.WebAPIException.TYPE_MISMATCH_ERR);
   }
-
-  if (adapter.checkServiceAvailability(errorCallback))
-    return;
 
   var msg = {
     'cmd': 'UnregisterServer',
@@ -1053,6 +1049,13 @@ BluetoothServiceHandler.prototype.unregister = function(successCallback, errorCa
     }
 
     _addConstProperty(this, 'isConnected', false);
+
+    for (var i in adapter.service_handlers) {
+      var service = adapter.service_handlers[i];
+      if (service.server_fd == result.socket_fd)
+        adapter.service_handlers.splice(i,1);
+    }
+
     if (successCallback)
       successCallback();
   });
