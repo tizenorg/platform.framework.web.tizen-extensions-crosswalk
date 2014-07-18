@@ -390,6 +390,7 @@ void BluetoothInstance::OnSocketConnected(int result,
         picojson::value(static_cast<double>(connection->socket_fd));
     o["peer"] = picojson::value(connection->remote_address);
     obj->socket_connected_map_[connection->socket_fd] = true;
+
   } else if (connection_state == BT_SOCKET_CONNECTED &&
              connection->local_role == BT_SOCKET_CLIENT) {
     o["cmd"] = picojson::value("");
@@ -400,7 +401,9 @@ void BluetoothInstance::OnSocketConnected(int result,
     o["uuid"] = picojson::value(connection->service_uuid);
     o["socket_fd"] =
         picojson::value(static_cast<double>(connection->socket_fd));
+    o["peer"] = picojson::value(connection->remote_address);
     obj->socket_connected_map_[connection->socket_fd] = true;
+
   } else if (connection_state == BT_SOCKET_DISCONNECTED) {
       o["cmd"] = picojson::value("");
       o["reply_id"] =
@@ -714,13 +717,21 @@ void BluetoothInstance::HandleRFCOMMListen(const picojson::value& msg) {
 }
 
 void BluetoothInstance::HandleConnectToService(const picojson::value& msg) {
-  callbacks_id_map_["ConnectToService"] = msg.get("reply_id").to_str();
+  picojson::value::object o;
   int error = 0;
 
   CAPI_ERR(
       bt_socket_connect_rfcomm(msg.get("address").to_str().c_str(),
                                msg.get("uuid").to_str().c_str()),
       error);
+  if (error != BT_ERROR_NONE) {
+    o["error"] = picojson::value(static_cast<double>(1));
+    o["cmd"] = picojson::value("");
+    o["reply_id"] = msg.get("reply_id");
+    InternalPostMessage(picojson::value(o));
+  } else {
+    callbacks_id_map_["ConnectToService"] = msg.get("reply_id").to_str();
+  }
  }
 
 void BluetoothInstance::HandleSocketWriteData(const picojson::value& msg) {

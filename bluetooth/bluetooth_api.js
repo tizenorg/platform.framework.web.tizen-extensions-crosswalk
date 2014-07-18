@@ -874,15 +874,17 @@ BluetoothDevice.prototype.connectToServiceByUUID =
     if (result.error != 0) {
       if (errorCallback) {
         var error = new tizen.WebAPIError(tizen.WebAPIException.UNKNOWN_ERR);
+        if(result.error == 1)
+          error = new tizen.WebAPIError(tizen.WebAPIException.INVALID_VALUES_ERR);
         errorCallback(error);
       }
-
       throw new tizen.WebAPIException(tizen.WebAPIException.TYPE_MISMATCH_ERR);
       return;
     }
 
     if (socketSuccessCallback) {
-      var socket_cb = new BluetoothSocket(result.uuid, this, result);
+      var i = adapter.indexOfDevice(adapter.known_devices, result.peer);
+      var socket_cb = new BluetoothSocket(result.uuid, adapter.known_devices[i], result);
       socketSuccessCallback(socket_cb);
     }
   });
