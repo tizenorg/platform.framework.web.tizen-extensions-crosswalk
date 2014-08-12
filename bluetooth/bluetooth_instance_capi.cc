@@ -26,6 +26,7 @@ BluetoothInstance::~BluetoothInstance() {
   CAPI(bt_deinitialize());
 }
 
+void BluetoothInstance::Initialize() {
   CAPI(bt_initialize());
   InitializeAdapter();
 }
