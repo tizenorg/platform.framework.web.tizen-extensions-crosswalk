@@ -31,7 +31,7 @@ BuildRequires: pkgconfig(capi-appfw-app-manager)
 BuildRequires: pkgconfig(capi-appfw-package-manager)
 BuildRequires: bluetooth-frwk-devel
 BuildRequires: pkgconfig(capi-network-connection)
-BuildRequires: pkgconfig(capi-network-nfc)
+# BuildRequires: pkgconfig(capi-network-nfc)
 BuildRequires: pkgconfig(capi-system-device)
 BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(capi-system-power)
