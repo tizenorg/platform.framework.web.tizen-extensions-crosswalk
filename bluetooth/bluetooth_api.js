@@ -271,32 +271,15 @@ var handleSocketClosed = function(msg) {
   }
 };
 
-var defaultAdapter = new BluetoothAdapter();
+function _addConstProperty(obj, propertyKey, propertyValue) {
+  Object.defineProperty(obj, propertyKey, {
+    configurable: true,
+    writable: false,
+    value: propertyValue
+  });
+}
 
-exports.getDefaultAdapter = function() {
-  var msg = {
-    'cmd': 'GetDefaultAdapter'
-  };
-  var result = JSON.parse(extension.internal.sendSyncMessage(JSON.stringify(msg)));
-
-  if (!result.error) {
-    _addConstProperty(defaultAdapter, 'name', result.name);
-    _addConstProperty(defaultAdapter, 'address', result.address);
-    _addConstProperty(defaultAdapter, 'powered', result.powered);
-    _addConstProperty(defaultAdapter, 'visible', result.visible);
-
-    if (result.hasOwnProperty('address') && result.address != '')
-      adapter.isReady = true;
-  } else {
-    adapter.isReady = false;
-    throw new tizen.WebAPIException(tizen.WebAPIException.UNKNOWN_ERR);
-  }
-
-  return defaultAdapter;
-};
-
-exports.deviceMajor = {};
-var deviceMajor = {
+var BluetoothClassDeviceMajor = {
   'MISC': { value: 0x00, configurable: false, writable: false },
   'COMPUTER': { value: 0x01, configurable: false, writable: false },
   'PHONE': { value: 0x02, configurable: false, writable: false },
@@ -309,10 +292,9 @@ var deviceMajor = {
   'HEALTH': { value: 0x09, configurable: false, writable: false },
   'UNCATEGORIZED': { value: 0x1F, configurable: false, writable: false }
 };
-Object.defineProperties(exports.deviceMajor, deviceMajor);
+_addConstProperty(exports, 'deviceMajor', BluetoothClassDeviceMajor);
 
-exports.deviceMinor = {};
-var deviceMinor = {
+var BluetoothClassDeviceMinor = {
   'COMPUTER_UNCATEGORIZED': { value: 0x00, configurable: false, writable: false },
   'COMPUTER_DESKTOP': { value: 0x01, configurable: false, writable: false },
   'COMPUTER_SERVER': { value: 0x02, configurable: false, writable: false },
@@ -386,10 +368,9 @@ var deviceMinor = {
   'HEALTH_KNEE_PROSTHESIS': { value: 0x0c, configurable: false, writable: false },
   'HEALTH_ANKLE_PROSTHESIS': { value: 0x0d, configurable: false, writable: false }
 };
-Object.defineProperties(exports.deviceMinor, deviceMinor);
+_addConstProperty(exports, 'deviceMinor', BluetoothClassDeviceMinor);
 
-exports.deviceService = {};
-var deviceService = {
+var BluetoothClassDeviceService = {
   'LIMITED_DISCOVERABILITY': { value: 0x0001, configurable: false, writable: false },
   'POSITIONING': { value: 0x0008, configurable: false, writable: false },
   'NETWORKING': { value: 0x0010, configurable: false, writable: false },
@@ -400,15 +381,31 @@ var deviceService = {
   'TELEPHONY': { value: 0x0200, configurable: false, writable: false },
   'INFORMATION': { value: 0x0400, configurable: false, writable: false }
 };
-Object.defineProperties(exports.deviceService, deviceService);
+_addConstProperty(exports, 'deviceService', BluetoothClassDeviceService);
 
-function _addConstProperty(obj, propertyKey, propertyValue) {
-  Object.defineProperty(obj, propertyKey, {
-    configurable: true,
-    writable: false,
-    value: propertyValue
-  });
-}
+var defaultAdapter = new BluetoothAdapter();
+
+exports.getDefaultAdapter = function() {
+  var msg = {
+    'cmd': 'GetDefaultAdapter'
+  };
+  var result = JSON.parse(extension.internal.sendSyncMessage(JSON.stringify(msg)));
+
+  if (!result.error) {
+    _addConstProperty(defaultAdapter, 'name', result.name);
+    _addConstProperty(defaultAdapter, 'address', result.address);
+    _addConstProperty(defaultAdapter, 'powered', result.powered);
+    _addConstProperty(defaultAdapter, 'visible', result.visible);
+
+    if (result.hasOwnProperty('address') && result.address != '')
+      adapter.isReady = true;
+  } else {
+    adapter.isReady = false;
+    throw new tizen.WebAPIException(tizen.WebAPIException.UNKNOWN_ERR);
+  }
+
+  return defaultAdapter;
+};
 
 function BluetoothAdapter() {
   _addConstProperty(this, 'name', '');
