@@ -1040,7 +1040,7 @@ BluetoothServiceHandler.prototype.unregister = function(successCallback, errorCa
   };
 
   postMessage(msg, function(result) {
-    if (result.error != 0) {
+    if (result.error) {
       if (errorCallback) {
         var error = new tizen.WebAPIError(tizen.WebAPIException.UNKNOWN_ERR);
         errorCallback(error);
@@ -1049,8 +1049,6 @@ BluetoothServiceHandler.prototype.unregister = function(successCallback, errorCa
       throw new tizen.WebAPIException(tizen.WebAPIException.TYPE_MISMATCH_ERR);
       return;
     }
-
-    _addConstProperty(this, 'isConnected', false);
 
     for (var i in adapter.service_handlers) {
       var service = adapter.service_handlers[i];

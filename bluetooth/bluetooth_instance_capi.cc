@@ -773,12 +773,18 @@ void BluetoothInstance::HandleCloseSocket(const picojson::value& msg) {
 
 void BluetoothInstance::HandleUnregisterServer(const picojson::value& msg) {
   int socket = static_cast<int>(msg.get("server_fd").get<double>());
+  int error = 0;
   LOG_DBG(socket);
-  CAPI(bt_socket_destroy_rfcomm(socket));
+
+  CAPI_ERR(bt_socket_destroy_rfcomm(socket), error);
 
   // CAPI calls callback only if there is a socket connected
-  if (socket_connected_map_[socket] = false) {
+  if (socket_connected_map_[socket] == false) {
     picojson::value::object o;
+    if (!error)
+      o["error"] = picojson::value(static_cast<double>(0));
+    else
+      o["error"] = picojson::value(static_cast<double>(1));
     o["cmd"] = picojson::value("");
     o["reply_id"] = msg.get("reply_id");
     o["socket_fd"] = picojson::value(static_cast<double>(socket));
