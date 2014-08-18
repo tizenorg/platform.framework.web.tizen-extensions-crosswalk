@@ -257,6 +257,12 @@ void BluetoothInstance::OnDiscoveryStateChanged(int result,
       obj->InternalPostMessage(picojson::value(o));
       break;
     }
+    case BT_ADAPTER_DEVICE_DISCOVERY_REMOVED: {
+      o["Address"] = picojson::value(discovery_info->remote_address);
+      o["cmd"] = picojson::value("DeviceRemoved");
+      obj->InternalPostMessage(picojson::value(o));
+      break;
+    }
     default:
       LOG_ERR("Unknown discovery state callback!");
       break;
@@ -335,6 +341,7 @@ void BluetoothInstance::OnBondCreated(int result, bt_device_info_s* device_info,
 void BluetoothInstance::OnBondDestroyed(int result, char* remote_address,
     void* user_data) {
   BluetoothInstance* obj = static_cast<BluetoothInstance*>(user_data);
+
   if (!obj) {
     LOG_ERR("user_data is NULL!");
     return;
