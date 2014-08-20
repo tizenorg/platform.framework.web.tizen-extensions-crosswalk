@@ -815,31 +815,37 @@ function BluetoothDevice(msg) {
   _addConstProperty(this, 'isConnected', (msg.Connected == 'true') ? true : false);
 
   if (msg.UUIDs) {
+    var uuids_array = [];
     if (typeof msg.UUIDs === 'string') {
       // FIXME(clecou) BlueZ backend sends a string to convert it into an array
       // A better approach would be to adapt backends instances to have a single JSON protocol.
-      var uuids_array = [];
       uuids_array = msg.UUIDs.substring(msg.UUIDs.indexOf('[') + 1,
           msg.UUIDs.indexOf(']')).split(',');
       for (var i = 0; i < uuids_array.length; i++) {
         uuids_array[i] = uuids_array[i].substring(2, uuids_array[i].length - 1);
       }
-      _addConstProperty(this, 'uuids', uuids_array);
+
     } else {
       // Tizen C API backend directly sends an array
-      _addConstProperty(this, 'uuids', msg.UUIDs);
+      uuids_array = msg.UUIDs;
+      for (var i = 0; i < msg.UUIDs.length; i++)
+        _addConstProperty(uuids_array, i.toString(), msg.UUIDs[i]);
     }
+    _addConstProperty(this, 'uuids', uuids_array);
   }
 
   var services = (msg.ClassService >> 13) & _deviceClassMask.SERVICE;
   var services_array = [];
+  var index = 0;
 
   // 11 is the number of bits in _deviceClassMask.SERVICE
   for (var i = 0; i < 11; i++)
-    if ((services & (1 << i)) !== 0)
-      services_array.push(1 << i);
+    if ((services & (1 << i)) !== 0) {
+      _addConstProperty(services_array, index.toString(), (1 << i));
+      index++;
+    }
 
-    _addConstProperty(this.deviceClass, 'services', services_array);
+  _addConstProperty(this.deviceClass, 'services', services_array);
 }
 
 BluetoothDevice.prototype.connectToServiceByUUID =
