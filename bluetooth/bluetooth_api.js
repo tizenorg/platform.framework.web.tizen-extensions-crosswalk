@@ -282,7 +282,8 @@ function _addConstProperty(obj, propertyKey, propertyValue) {
   });
 }
 
-var BluetoothClassDeviceMajor = {
+exports.deviceMajor = {};
+var deviceMajor = {
   'MISC': { value: 0x00, configurable: false, writable: false },
   'COMPUTER': { value: 0x01, configurable: false, writable: false },
   'PHONE': { value: 0x02, configurable: false, writable: false },
@@ -295,9 +296,11 @@ var BluetoothClassDeviceMajor = {
   'HEALTH': { value: 0x09, configurable: false, writable: false },
   'UNCATEGORIZED': { value: 0x1F, configurable: false, writable: false }
 };
-_addConstProperty(exports, 'deviceMajor', BluetoothClassDeviceMajor);
+Object.defineProperties(exports.deviceMajor, deviceMajor);
+_addConstProperty(exports, 'deviceMajor', exports.deviceMajor);
 
-var BluetoothClassDeviceMinor = {
+exports.deviceMinor = {};
+var deviceMinor = {
   'COMPUTER_UNCATEGORIZED': { value: 0x00, configurable: false, writable: false },
   'COMPUTER_DESKTOP': { value: 0x01, configurable: false, writable: false },
   'COMPUTER_SERVER': { value: 0x02, configurable: false, writable: false },
@@ -371,9 +374,11 @@ var BluetoothClassDeviceMinor = {
   'HEALTH_KNEE_PROSTHESIS': { value: 0x0c, configurable: false, writable: false },
   'HEALTH_ANKLE_PROSTHESIS': { value: 0x0d, configurable: false, writable: false }
 };
-_addConstProperty(exports, 'deviceMinor', BluetoothClassDeviceMinor);
+Object.defineProperties(exports.deviceMinor, deviceMinor);
+_addConstProperty(exports, 'deviceMinor', exports.deviceMinor);
 
-var BluetoothClassDeviceService = {
+exports.deviceService = {};
+var deviceService = {
   'LIMITED_DISCOVERABILITY': { value: 0x0001, configurable: false, writable: false },
   'POSITIONING': { value: 0x0008, configurable: false, writable: false },
   'NETWORKING': { value: 0x0010, configurable: false, writable: false },
@@ -384,7 +389,8 @@ var BluetoothClassDeviceService = {
   'TELEPHONY': { value: 0x0200, configurable: false, writable: false },
   'INFORMATION': { value: 0x0400, configurable: false, writable: false }
 };
-_addConstProperty(exports, 'deviceService', BluetoothClassDeviceService);
+Object.defineProperties(exports.deviceService, deviceService);
+_addConstProperty(exports, 'deviceService', exports.deviceService);
 
 var defaultAdapter = new BluetoothAdapter();
 
