@@ -8,6 +8,8 @@
 #include <package_manager.h>
 #include <package-manager.h>
 #include <pkgmgr-info.h>
+#include <tzplatform_config.h>
+#include <unistd.h>
 
 #include <memory>
 #include <unistd.h>
@@ -17,8 +19,9 @@
 #include "application/application_extension_utils.h"
 #include "tizen/tizen.h"
 
-#define GLOBAL_USER 0
 namespace {
+
+const uid_t GLOBAL_USER = tzplatform_getuid(TZ_SYS_GLOBALAPP_USER);
 
 void SetErrorMessage(picojson::object& error,
                      const std::string& property_name) {
@@ -42,19 +45,18 @@ class PkgMgrHandle {
   static PkgMgrHandle* Create(const std::string& app_id,
                               picojson::object& error) {
     pkgmgrinfo_appinfo_h appinfo_handle;
+    int ret = NULL;
     uid_t uid = getuid();
-    if( uid != GLOBAL_USER) {
-      int ret = pkgmgrinfo_appinfo_get_usr_appinfo(app_id.c_str(), uid, &appinfo_handle);
-      if (ret != PMINFO_R_OK) {
-        SetErrorMessage(error, "appinfo");
-        return NULL;
-      }
+    if (uid != GLOBAL_USER) {
+      ret = pkgmgrinfo_appinfo_get_usr_appinfo(app_id.c_str(),
+                uid, &appinfo_handle);
     } else {
-            int ret = pkgmgrinfo_appinfo_get_appinfo(app_id.c_str(), &appinfo_handle);
-      if (ret != PMINFO_R_OK) {
-        SetErrorMessage(error, "appinfo");
-        return NULL;
-      }
+      ret = pkgmgrinfo_appinfo_get_appinfo(app_id.c_str(),
+                &appinfo_handle);
+    }
+    if (ret != PMINFO_R_OK) {
+      SetErrorMessage(error, "appinfo");
+      return NULL;
     }
     return CreateInternal(app_id, appinfo_handle, true, error);
   }
@@ -163,20 +165,15 @@ class PkgMgrHandle {
 
     pkgmgrinfo_pkginfo_h pkginfo_handle;
     uid_t uid = getuid();
-    if( uid != GLOBAL_USER) {
+    if (uid != GLOBAL_USER) {
       ret = pkgmgrinfo_pkginfo_get_usr_pkginfo(pkg_id, uid, &pkginfo_handle);
-      if (ret != PMINFO_R_OK) {
-        SetErrorMessage(error, "pkginfo");
-        pkgmgrinfo_appinfo_destroy_appinfo(appinfo_handle);
-        return NULL;
-      }
     } else {
       ret = pkgmgrinfo_pkginfo_get_pkginfo(pkg_id, &pkginfo_handle);
-      if (ret != PMINFO_R_OK) {
-        SetErrorMessage(error, "pkginfo");
-        pkgmgrinfo_appinfo_destroy_appinfo(appinfo_handle);
-        return NULL;
-      }
+    }
+    if (ret != PMINFO_R_OK) {
+      SetErrorMessage(error, "pkginfo");
+      pkgmgrinfo_appinfo_destroy_appinfo(appinfo_handle);
+      return NULL;
     }
     return new PkgMgrHandle(app_id, pkg_id, appinfo_handle,
                             pkginfo_handle, owns_appinfo_handle);
@@ -268,18 +265,17 @@ int GetAllAppInfoCallback(pkgmgrinfo_appinfo_h appinfo_handle,
 void RetrieveAllInstalledAppInfo(picojson::array& data,
                                  picojson::object& error) {
   uid_t uid = getuid();
+  int ret = NULL;
   if (uid != GLOBAL_USER) {
-    int ret = pkgmgrinfo_appinfo_get_usr_installed_list(GetAllAppInfoCallback, uid, &data);
-    if (ret != PMINFO_R_OK) {
-      SetErrorMessage(error, "installed");
-      return;
-    }
+    ret = pkgmgrinfo_appinfo_get_usr_installed_list(GetAllAppInfoCallback,
+              uid, &data);
   } else {
-      int ret = pkgmgrinfo_appinfo_get_installed_list(GetAllAppInfoCallback, &data);
-      if (ret != PMINFO_R_OK) {
-        SetErrorMessage(error, "installed");
-        return;
-      }
+    ret = pkgmgrinfo_appinfo_get_installed_list(GetAllAppInfoCallback,
+              &data);
+  }
+  if (ret != PMINFO_R_OK) {
+    SetErrorMessage(error, "installed");
+    return;
   }
 
   if (data.empty())

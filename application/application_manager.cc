@@ -7,6 +7,7 @@
 #include <app_manager.h>
 #include <aul.h>
 #include <pkgmgr-info.h>
+#include <tzplatform_config.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -20,8 +21,8 @@
 #include "application/application_instance.h"
 #include "tizen/tizen.h"
 
-#define GLOBAL_USER 0
 namespace {
+const  uid_t GLOBAL_USER = tzplatform_getuid(TZ_SYS_GLOBALAPP_USER);
 
 // Application information events.
 const char kOkayEvent[] = "ok";

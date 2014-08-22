@@ -10,6 +10,7 @@
 
 #include <pkgmgr-info.h>
 #include <tzplatform_config.h>
+#include <unistd.h>
 
 #include <cassert>
 #include <algorithm>
@@ -19,9 +20,9 @@
 
 #include "common/extension.h"
 
-# define GLOBAL_USER 0
-
 namespace {
+
+const uid_t GLOBAL_USER = 0;
 
 const char kInternalStorage[] = "internal";
 const char kRemovableStorage[] = "removable";
@@ -145,7 +146,8 @@ std::string VirtualFS::GetAppId(const std::string& package_id) {
   pkgmgrinfo_pkginfo_h pkginfo_handle;
   uid_t uid = getuid();
   if (uid != GLOBAL_USER) {
-    int ret = pkgmgrinfo_pkginfo_get_usr_pkginfo(package_id.c_str(), uid, &pkginfo_handle);
+    int ret = pkgmgrinfo_pkginfo_get_usr_pkginfo(package_id.c_str(),
+                                                 uid, &pkginfo_handle);
     if (ret != PMINFO_R_OK)
       return std::string();
     ret = pkgmgrinfo_pkginfo_get_mainappid(pkginfo_handle, &appid);
@@ -154,7 +156,8 @@ std::string VirtualFS::GetAppId(const std::string& package_id) {
       return std::string();
     }
   } else {
-    int ret = pkgmgrinfo_pkginfo_get_pkginfo(package_id.c_str(), &pkginfo_handle);
+    int ret = pkgmgrinfo_pkginfo_get_pkginfo(package_id.c_str(),
+                                             &pkginfo_handle);
     if (ret != PMINFO_R_OK)
       return std::string();
     ret = pkgmgrinfo_pkginfo_get_mainappid(pkginfo_handle, &appid);
@@ -174,7 +177,8 @@ std::string VirtualFS::GetExecPath(const std::string& app_id) {
   pkgmgrinfo_appinfo_h appinfo_handle;
   uid_t uid = getuid();
   if (uid != GLOBAL_USER) {
-    int ret = pkgmgrinfo_appinfo_get_usr_appinfo(app_id.c_str(), uid, &appinfo_handle);
+    int ret = pkgmgrinfo_appinfo_get_usr_appinfo(app_id.c_str(),
+                                                 uid, &appinfo_handle);
     if (ret != PMINFO_R_OK)
       return std::string();
     ret = pkgmgrinfo_appinfo_get_exec(appinfo_handle, &exec_path);
@@ -183,7 +187,8 @@ std::string VirtualFS::GetExecPath(const std::string& app_id) {
       return std::string();
     }
   } else {
-        int ret = pkgmgrinfo_appinfo_get_appinfo(app_id.c_str(), &appinfo_handle);
+        int ret = pkgmgrinfo_appinfo_get_appinfo(app_id.c_str(),
+                                                 &appinfo_handle);
     if (ret != PMINFO_R_OK)
       return std::string();
     ret = pkgmgrinfo_appinfo_get_exec(appinfo_handle, &exec_path);
