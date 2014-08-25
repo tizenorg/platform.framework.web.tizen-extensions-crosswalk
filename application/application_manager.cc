@@ -20,6 +20,7 @@
 #include "application/application_instance.h"
 #include "tizen/tizen.h"
 
+#define GLOBAL_USER 0
 namespace {
 
 // Application information events.
@@ -175,9 +176,14 @@ picojson::value* ApplicationManager::LaunchApp(const std::string& app_id) {
 
 picojson::value* ApplicationManager::GetAppMetaData(const std::string& app_id) {
   pkgmgrinfo_appinfo_h handle;
-  if (pkgmgrinfo_appinfo_get_appinfo(app_id.c_str(), &handle) != PMINFO_R_OK)
-    return CreateResultMessage(WebApiAPIErrors::NOT_FOUND_ERR);
-
+  uid_t uid = getuid();
+  if (uid != GLOBAL_USER) {
+    if (pkgmgrinfo_appinfo_get_usr_appinfo(app_id.c_str(), uid, &handle) != PMINFO_R_OK)
+      return CreateResultMessage(WebApiAPIErrors::NOT_FOUND_ERR);
+  } else {
+          if (pkgmgrinfo_appinfo_get_appinfo(app_id.c_str(), &handle) != PMINFO_R_OK)
+      return CreateResultMessage(WebApiAPIErrors::NOT_FOUND_ERR);
+  }
   // The first boolean will set to false if AppMetaDataCallback fail.
   auto data = std::make_tuple(true, picojson::array());
   int ret = pkgmgrinfo_appinfo_foreach_metadata(
