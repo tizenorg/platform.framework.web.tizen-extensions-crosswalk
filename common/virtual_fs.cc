@@ -15,8 +15,11 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #include "common/extension.h"
+
+# define GLOBAL_USER 0
 
 namespace {
 
@@ -140,13 +143,25 @@ int VirtualFS::GetDirEntryCount(const char* path) {
 std::string VirtualFS::GetAppId(const std::string& package_id) {
   char* appid = NULL;
   pkgmgrinfo_pkginfo_h pkginfo_handle;
-  int ret = pkgmgrinfo_pkginfo_get_pkginfo(package_id.c_str(), &pkginfo_handle);
-  if (ret != PMINFO_R_OK)
-    return std::string();
-  ret = pkgmgrinfo_pkginfo_get_mainappid(pkginfo_handle, &appid);
-  if (ret != PMINFO_R_OK) {
-    pkgmgrinfo_pkginfo_destroy_pkginfo(pkginfo_handle);
-    return std::string();
+  uid_t uid = getuid();
+  if (uid != GLOBAL_USER) {
+    int ret = pkgmgrinfo_pkginfo_get_usr_pkginfo(package_id.c_str(), uid, &pkginfo_handle);
+    if (ret != PMINFO_R_OK)
+      return std::string();
+    ret = pkgmgrinfo_pkginfo_get_mainappid(pkginfo_handle, &appid);
+    if (ret != PMINFO_R_OK) {
+      pkgmgrinfo_pkginfo_destroy_pkginfo(pkginfo_handle);
+      return std::string();
+    }
+  } else {
+    int ret = pkgmgrinfo_pkginfo_get_pkginfo(package_id.c_str(), &pkginfo_handle);
+    if (ret != PMINFO_R_OK)
+      return std::string();
+    ret = pkgmgrinfo_pkginfo_get_mainappid(pkginfo_handle, &appid);
+    if (ret != PMINFO_R_OK) {
+      pkgmgrinfo_pkginfo_destroy_pkginfo(pkginfo_handle);
+      return std::string();
+    }
   }
 
   std::string retval(appid);
@@ -157,13 +172,25 @@ std::string VirtualFS::GetAppId(const std::string& package_id) {
 std::string VirtualFS::GetExecPath(const std::string& app_id) {
   char* exec_path = NULL;
   pkgmgrinfo_appinfo_h appinfo_handle;
-  int ret = pkgmgrinfo_appinfo_get_appinfo(app_id.c_str(), &appinfo_handle);
-  if (ret != PMINFO_R_OK)
-    return std::string();
-  ret = pkgmgrinfo_appinfo_get_exec(appinfo_handle, &exec_path);
-  if (ret != PMINFO_R_OK) {
-    pkgmgrinfo_appinfo_destroy_appinfo(appinfo_handle);
-    return std::string();
+  uid_t uid = getuid();
+  if (uid != GLOBAL_USER) {
+    int ret = pkgmgrinfo_appinfo_get_usr_appinfo(app_id.c_str(), uid, &appinfo_handle);
+    if (ret != PMINFO_R_OK)
+      return std::string();
+    ret = pkgmgrinfo_appinfo_get_exec(appinfo_handle, &exec_path);
+    if (ret != PMINFO_R_OK) {
+      pkgmgrinfo_appinfo_destroy_appinfo(appinfo_handle);
+      return std::string();
+    }
+  } else {
+        int ret = pkgmgrinfo_appinfo_get_appinfo(app_id.c_str(), &appinfo_handle);
+    if (ret != PMINFO_R_OK)
+      return std::string();
+    ret = pkgmgrinfo_appinfo_get_exec(appinfo_handle, &exec_path);
+    if (ret != PMINFO_R_OK) {
+      pkgmgrinfo_appinfo_destroy_appinfo(appinfo_handle);
+      return std::string();
+    }
   }
 
   std::string retval(exec_path);
