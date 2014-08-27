@@ -54,6 +54,8 @@ void BluetoothInstance::HandleMessage(const char* message) {
     HandleDestroyBonding(v);
   else if (cmd == "RFCOMMListen")
     HandleRFCOMMListen(v);
+  else if (cmd == "ConnectToService")
+    HandleConnectToService(v);
   else if (cmd == "CloseSocket")
     HandleCloseSocket(v);
   else if (cmd == "UnregisterServer")
