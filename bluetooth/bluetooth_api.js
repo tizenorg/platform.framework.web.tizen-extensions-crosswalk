@@ -741,7 +741,7 @@ BluetoothAdapter.prototype.registerRFCOMMServiceByUUID =
       return;
     }
 
-    var service = new BluetoothServiceHandler(uuid, name, result);
+    var service = new BluetoothServiceHandler(uuid.toUpperCase(), name, result);
     adapter.service_handlers.push(service);
 
     if (serviceSuccessCallback) {
@@ -835,7 +835,7 @@ function BluetoothDevice(msg) {
       // Tizen C API backend directly sends an array
       uuids_array = msg.UUIDs;
       for (var i = 0; i < msg.UUIDs.length; i++)
-        _addConstProperty(uuids_array, i.toString(), msg.UUIDs[i]);
+        _addConstProperty(uuids_array, i.toString(), msg.UUIDs[i].toUpperCase());
     }
     _addConstProperty(this, 'uuids', uuids_array);
   }
@@ -866,7 +866,7 @@ BluetoothDevice.prototype.connectToServiceByUUID =
 
   var uuid_found = false;
   for (var i = 0; i < this.uuids.length; i++) {
-    if (this.uuids[i] == uuid) {
+    if (this.uuids[i] == uuid.toUpperCase()) {
       uuid_found = true;
       break;
     }
