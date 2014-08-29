@@ -390,6 +390,8 @@ void BluetoothInstance::OnSocketConnected(int result,
   if (result) {
     LOG_ERR("onSocketConnected() is failed");
     o["error"] = picojson::value(static_cast<double>(1));
+  } else {
+    o["error"] = picojson::value(static_cast<double>(0));
   }
 
   if (connection_state == BT_SOCKET_CONNECTED &&
