@@ -943,7 +943,7 @@ BluetoothDevice.prototype._updateProperties = function(device) {
 function BluetoothSocket(uuid, peer, msg) {
   _addConstProperty(this, 'uuid', uuid);
   _addConstProperty(this, 'peer', peer);
-  _addConstProperty(this, 'state', BluetoothSocketState.OPEN);
+  _addConstProperty(this, 'state', 'OPEN');
   this.onclose = null;
   this.onmessage = null;
   this.data = [];
@@ -956,20 +956,9 @@ function BluetoothSocket(uuid, peer, msg) {
   }
 }
 
-var BluetoothSocketState = {
-  'CLOSE': 1,
-  'OPEN': 2
-};
-Object.defineProperty(BluetoothSocket, 'BluetoothSocketState', {
-  configurable: false,
-  writable: false,
-  value: BluetoothSocketState
-});
-
-
 BluetoothSocket.prototype.writeData = function(data) {
   // make sure that socket is connected and opened.
-  if (this.state == BluetoothSocketState.CLOSE) {
+  if (this.state == 'CLOSED') {
     throw new tizen.WebAPIException(tizen.WebAPIException.UNKNOWN_ERR);
     return;
   }
@@ -1009,7 +998,7 @@ BluetoothSocket.prototype.close = function() {
         var socket = adapter.sockets[i];
         if (socket.socket_fd === msg.socket_fd) {
           if (socket.onclose && typeof socket.onmessage === 'function') {
-            _addConstProperty(adapter.sockets[i], 'state', BluetoothSocketState.CLOSE);
+            _addConstProperty(adapter.sockets[i], 'state', 'CLOSED');
             socket.onclose();
           }
         }
