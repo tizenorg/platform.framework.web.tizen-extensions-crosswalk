@@ -894,10 +894,13 @@ BluetoothDevice.prototype.connectToServiceByUUID =
       return;
     }
 
+    var i = adapter.indexOfDevice(adapter.known_devices, result.peer);
+    var socket = new BluetoothSocket(result.uuid, adapter.known_devices[i], result);
+    adapter.sockets.push(socket);
+    _addConstProperty(socket, 'isConnected', true);
+
     if (socketSuccessCallback) {
-      var i = adapter.indexOfDevice(adapter.known_devices, result.peer);
-      var socket_cb = new BluetoothSocket(result.uuid, adapter.known_devices[i], result);
-      socketSuccessCallback(socket_cb);
+      socketSuccessCallback(socket);
     }
   });
 };
