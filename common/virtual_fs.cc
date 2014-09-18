@@ -22,7 +22,7 @@
 
 namespace {
 
-const uid_t GLOBAL_USER = 0;
+const uid_t GLOBAL_USER = tzplatform_getuid(TZ_SYS_GLOBALAPP_USER);
 
 const char kInternalStorage[] = "internal";
 const char kRemovableStorage[] = "removable";
