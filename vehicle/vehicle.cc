@@ -297,6 +297,7 @@ void Vehicle::Get(const std::string& property, Zone::Type zone, double ret_id) {
 
   if (error_ptr) {
     debugOut("failed to get properties proxy");
+    delete data;
     return;
   }
 
