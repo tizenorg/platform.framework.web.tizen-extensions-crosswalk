@@ -26,6 +26,7 @@
             'packages': [
               'capi-system-system-settings',
               'vconf',
+              'gio-2.0',
             ]
           },
           'includes': [
