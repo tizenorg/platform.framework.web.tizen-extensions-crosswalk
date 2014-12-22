@@ -285,12 +285,14 @@ void BluetoothInstance::OnDiscoveryStateChanged(int result,
       obj->SendCmdToJs(kDeviceFound, o);
       break;
     }
+#if 0
     case BT_ADAPTER_DEVICE_DISCOVERY_REMOVED: {
       picojson::value::object o;
       o["Address"] = picojson::value(discovery_info->remote_address);
       obj->SendCmdToJs(kDeviceRemoved, o);
       break;
     }
+#endif
     default:
       LOG_ERR("Unknown discovery state callback!");
       break;
