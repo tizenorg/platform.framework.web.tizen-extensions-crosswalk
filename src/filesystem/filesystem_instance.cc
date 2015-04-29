@@ -1048,7 +1048,7 @@ void FilesystemInstance::HandleFileStreamWrite(const picojson::value& msg,
   if (msg.get("type").to_str() == "Bytes") {
     picojson::array a = msg.get("data").get<picojson::array>();
     for (picojson::array::iterator iter = a.begin(); iter != a.end(); ++iter)
-      buffer.append<int>(1, (*iter).get<double>());
+      buffer.append(1, (*iter).get<double>());
   } else if (msg.get("type").to_str() == "Base64") {
     buffer = base64::ConvertFrom(msg.get("data").to_str());
   } else {
