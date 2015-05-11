@@ -5,7 +5,7 @@
 #ifndef COMMON_VIRTUAL_FS_H_
 #define COMMON_VIRTUAL_FS_H_
 
-#include <appfw/app_storage.h>
+#include <storage.h>
 
 #include <map>
 #include <set>

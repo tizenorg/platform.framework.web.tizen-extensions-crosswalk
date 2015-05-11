@@ -38,6 +38,7 @@ BuildRequires: pkgconfig(capi-system-runtime-info)
 BuildRequires: pkgconfig(capi-system-sensor)
 BuildRequires: pkgconfig(capi-system-system-settings)
 BuildRequires: pkgconfig(libtzplatform-config)
+BuildRequires: pkgconfig(storage)
 %if "%{profile}" == "ivi"
 BuildRequires: pkgconfig(automotive-message-broker)
 %endif

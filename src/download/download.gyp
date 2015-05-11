@@ -25,7 +25,6 @@
           ],
           'variables': {
             'packages': [
-              'capi-appfw-application',
               'capi-web-url-download',
             ]
           },
