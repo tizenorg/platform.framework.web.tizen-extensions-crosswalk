@@ -66,7 +66,8 @@ void RetrievePackageAppIds(const char* package,
     std::cerr << "Cannot destroy package info.\n";
 }
 
-int AppEventsCallback(int id, const char* type, const char* package,
+int AppEventsCallback(uid_t /*target_uid*/, int id,
+                      const char* type, const char* package,
                       const char* key, const char* val,
                       const void* msg, void* data) {
   std::string event_type(val);
