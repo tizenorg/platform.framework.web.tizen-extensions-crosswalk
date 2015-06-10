@@ -21,7 +21,7 @@ notification_h NotificationManager::CreateNotification(
 int NotificationManager::PostNotification(notification_h notification,
                                           NotificationClient* client) {
   int priv_id;
-  notification_error_e err = notification_insert(notification, &priv_id);
+  int err = notification_insert(notification, &priv_id);
   if (err != NOTIFICATION_ERROR_NONE)
     return 0;
 
@@ -40,7 +40,7 @@ bool NotificationManager::RemoveNotification(int id) {
 
   // We don't erase the entry from the map here, but when the OnDetailedChanged
   // is called later.
-  notification_error_e err = notification_delete_by_priv_id(
+  int err = notification_delete_by_priv_id(
       NULL, NOTIFICATION_TYPE_NOTI, id);
   return (err == NOTIFICATION_ERROR_NONE);
 }
@@ -53,7 +53,7 @@ notification_h NotificationManager::GetNotification(int id) {
 }
 
 bool NotificationManager::UpdateNotification(notification_h notification) {
-  notification_error_e err = notification_update(notification);
+  int err = notification_update(notification);
   return (err == NOTIFICATION_ERROR_NONE);
 }
 

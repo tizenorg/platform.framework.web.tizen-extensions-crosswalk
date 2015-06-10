@@ -6,6 +6,7 @@
 #define NOTIFICATION_NOTIFICATION_MANAGER_TIZEN_H_
 
 #include <notification.h>
+#include <notification_internal.h>
 #include <map>
 
 class NotificationClient {
