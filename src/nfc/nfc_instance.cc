@@ -251,7 +251,7 @@ int JsonMessageToNdefMessage(const picojson::value& message,
 
 NfcInstance::NfcInstance()
     : nfc_manager_activated_(nfc_manager_is_activated()) {
-  nfc_manager_init_code_ = nfc_manager_initialize_sync();
+  nfc_manager_init_code_ = nfc_manager_initialize();
   nfc_manager_set_activation_changed_cb(OnActivationChangedCallBack, this);
 }
 
