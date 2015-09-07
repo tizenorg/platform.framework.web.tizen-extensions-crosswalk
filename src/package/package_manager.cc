@@ -5,7 +5,6 @@
 #include "package/package_manager.h"
 
 #include <package-manager.h>
-#include <pkgmgr-dbinfo.h>
 #include <unistd.h>
 
 #include "common/picojson.h"

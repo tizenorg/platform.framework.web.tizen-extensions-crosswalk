@@ -5,8 +5,8 @@
 #include "package/package_info.h"
 
 #include <package-manager.h>
-#include <pkgmgr-dbinfo.h>
 #include <pkgmgr-info.h>
+#include <pkgmgr/pkgmgr_parser.h>
 
 #include <unistd.h>
 #include <vector>
@@ -35,7 +35,7 @@ class PkgMgrHandle {
   static PkgMgrHandle* Create(const std::string& id,
                               bool is_app_id,
                               picojson::object& error) {
-    pkgmgr_pkginfo_h pkginfo_handle;
+    pkgmgrinfo_pkginfo_h pkginfo_handle;
     int ret = PMINFO_R_OK;
     char* pkg_id = NULL;
     uid_t uid = getuid();
@@ -63,9 +63,9 @@ class PkgMgrHandle {
     }
 
     if (uid != GLOBAL_USER)
-      ret = pkgmgr_pkginfo_get_usr_pkginfo(pkg_id, uid, &pkginfo_handle);
+      ret = pkgmgrinfo_pkginfo_get_usr_pkginfo(pkg_id, uid, &pkginfo_handle);
     else
-      ret = pkgmgr_pkginfo_get_pkginfo(pkg_id, &pkginfo_handle);
+      ret = pkgmgrinfo_pkginfo_get_pkginfo(pkg_id, &pkginfo_handle);
 
     if (ret != PMINFO_R_OK) {
       SetErrorMessage(error, "pkginfo");

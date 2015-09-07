@@ -5,6 +5,7 @@
 #include "application/application_manager.h"
 
 #include <app_manager.h>
+#include <app_manager_extension.h>
 #include <aul.h>
 #include <pkgmgr-info.h>
 #include <tzplatform_config.h>

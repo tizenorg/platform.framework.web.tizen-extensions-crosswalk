@@ -65,9 +65,11 @@ BuildRequires: pkgconfig(message-port)
 BuildRequires: pkgconfig(notification)
 BuildRequires: pkgconfig(pkgmgr)
 BuildRequires: pkgconfig(pkgmgr-info)
+BuildRequires: pkgconfig(pkgmgr-parser)
 BuildRequires: pkgconfig(pmapi)
 BuildRequires: pkgconfig(tapi)
 BuildRequires: pkgconfig(vconf)
+BuildRequires: pkgconfig(icu-i18n)
 %if %{with wayland}
 BuildRequires: pkgconfig(wayland-client)
 %else

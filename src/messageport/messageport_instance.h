@@ -42,7 +42,7 @@ class MessageportInstance : public common::Instance {
   void OnReceiveLocalMessage(int id, const char* remote_app_id,
         const char* remote_port, bool trusted_message, bundle* data);
   static void OnReceiveLocalMessageThunk(int id, const char* remote_app_id,
-        const char* remote_port, bool trusted_message, bundle* data);
+        const char* remote_port, bool trusted_message, bundle* data, void *user_data);
 };
 
 #endif  // MESSAGEPORT_MESSAGEPORT_INSTANCE_H_

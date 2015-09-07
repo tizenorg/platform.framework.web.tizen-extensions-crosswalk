@@ -74,7 +74,7 @@ void MessageportInstance::OnReceiveLocalMessage(
 
 void MessageportInstance::OnReceiveLocalMessageThunk(
       int id, const char* remote_app_id, const char* remote_port,
-      bool trusted_message, bundle* data) {
+      bool trusted_message, bundle* data, void *user_data) {
   MessageportInstance* self = MessageportInstance::GetInstanceByPortId(id);
   if (!self) {
     std::cerr << "Could not find Messageport by id: " << id << "\n";
