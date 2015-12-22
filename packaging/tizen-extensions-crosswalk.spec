@@ -77,7 +77,7 @@ BuildRequires: pkgconfig(x11)
 BuildRequires: pkgconfig(xrandr)
 %endif
 BuildRequires: python
-Requires:      crosswalk
+Requires:      crosswalk-tizen
 # For Content API
 Requires:      media-thumbnail-server
 
